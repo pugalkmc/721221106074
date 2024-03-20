@@ -1,6 +1,7 @@
 import express from 'express'
 import { config } from 'dotenv'
 import axios from 'axios'
+import Product from '../Models/Products.js'
 config()
 
 const CLIENT_ID = process.env.CLIENT_ID
@@ -58,12 +59,29 @@ router.get('/:categoryname/products', checkToken, async (req, res) => {
 
             const responses = await Promise.all(requests);
 
-            const totalProducts = responses.reduce((acc, response) => {
+            var totalProducts = responses.reduce((acc, response) => {
                 acc.push(...response.data);
                 return acc;
             }, []);
 
-            return res.json(totalProducts);
+            var removeOutOfStock = []
+            totalProducts.map(async (each)=>{
+                if (each.availability === 'yes'){
+
+                    // const product = await Product.create(each);
+                    // each.set(product._id)
+                    removeOutOfStock.push(each)
+                }
+            })
+
+            removeOutOfStock.sort((product1, product2)=>{
+                return product1.rating-product2.rating
+            })
+
+            console.log(removeOutOfStock)
+            removeOutOfStock.reverse();
+
+            return res.json(removeOutOfStock);
         } catch (error) {
             console.error('Error fetching products:', error);
             return res.status(500).json({ message: 'Internal server error' });
@@ -79,10 +97,11 @@ router.get('/:categoryname/products', checkToken, async (req, res) => {
 
 
 
-// router.get("/:categoryName/products/:productId", checkToken, async (req,res)=> {
-//     const { categoryName, productId } = req.params;
+router.get("/:categoryName/products/:productId", checkToken, async (req,res)=> {
+    const { productId } = req.params;
 
-//     const productById = await axios.get(`http://20.244.56.144/products/companies/${companyName}/categories/${}/products?top=${}&minPrice=${}&maxPrice=${}`)
-// })
+    const getData = await Product.findOne({productId: parseInt(productId)});
+    return res.json(getData);
+})
 
 export default router;
