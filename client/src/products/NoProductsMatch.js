@@ -6,3 +6,5 @@ const NoProductsMatch = ()=>{
         </div>
     )
 }
+
+export default NoProductsMatch;

@@ -1,51 +1,68 @@
-import { useEffect, useState } from 'react'
-import axios from 'axios'
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import NoProductsMatch from './NoProductsMatch';
 
 const ProductList = () => {
     const [products, setProducts] = useState([]);
-    const [category, setCategory] = useState();
+    const [category, setCategory] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const fetchProducts = async () => {
-        await axios.get(`http://localhost:3001/category/${category}/products`)
-            .then((response) => {
-                setProducts(response.data);
-            })
-            .catch((error) => {
-                console.error('Error fetching products:', error);
-            });
-    }
+    const categories = [
+        "Phone", "Computer", "TV", "Earphone", "Tablet", "Charger", 
+        "Mouse", "Keypad", "Bluetooth", "Pendrive", "Remote", 
+        "Speaker", "Headset", "Laptop", "PC"
+    ];
 
     useEffect(() => {
-        fetchProducts();
+        const fetchProducts = async () => {
+            setLoading(true);
+            try {
+                const response = await axios.get(`http://localhost:3001/category/${category}/products`);
+                setProducts(response.data);
+            } catch (error) {
+                console.error('Error fetching products:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (category) {
+            fetchProducts();
+        }
     }, [category]);
 
-    const NoProductsMatch = () => <div>No products match the selected category.</div>;
+    const handleChange = (e) => {
+        setCategory(e.target.value);
+    };
 
     return (
-        <div className='container'>
-            <form className='form'>
-                <select onChange={(e)=>setCategory(e.target.value)}>
-                    {
-                      category.forEach(each=>{
-                        <option>
-                            each
-                        </option>
-                      })
-                    }
-                </select>
-                {products.length > 0 ? (
-                <div className='row-cols-4'>
-                    {products.map((product) => (
-                        <div key={product.id}>
-                            <h3>{product.name}</h3>
-                            <p>{product.description}</p>
-                        </div>
+        <div className='container-fluid'>
+            <form className='form' style={{border:'solid 1px black',padding:'20px'}}>
+                <p className='text'>Select the product category</p>
+                <select value={category} onChange={handleChange}>
+                    <option value="">Select Category</option>
+                    {categories.map((cat, index) => (
+                        <option key={index} value={cat}>{cat}</option>
                     ))}
-                </div>
-            ) : (
-                <NoProductsMatch />
-            )}
+                </select>
             </form>
+            <div className='row'>
+                {loading ? (
+                    <div>Loading...</div>
+                ) : (
+                    products.length > 0 ? (
+                        products.map((product) => (
+                            <div key={product.id} className="product">
+                                <h3>{product.name}</h3>
+                                <p>{product.description}</p>
+                            </div>
+                        ))
+                        
+                    ) : (
+                        <NoProductsMatch/>
+                    )
+                )}
+            </div>
         </div>
     );
 }

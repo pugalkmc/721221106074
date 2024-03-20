@@ -19,23 +19,22 @@ const companies = ["AMZ", "FLP", "SNP", "MYN", "AZO"]
 const products = ["Phone", "Computer", "TV", "Earphone", "Tablet", "Charger", "Mouse", "Keypad", "Bluetooth", "Pendrive", "Remote", "Speaker", "Headset", "Laptop", "PC"]
 const router = express.Router()
 
-const checkToken = async (req,res,next)=>{
-    await axios.post('http://20.244.56.144/products/auth', companyDetails)
-    .then((data)=> {
-        if (data.data.access_token){
-            TOKEN = data.data.access_token
-            return next()
+const checkToken = async (req, res, next) => {
+    try {
+        const response = await axios.post('http://20.244.56.144/products/auth', companyDetails);
+        if (response.data.access_token) {
+            TOKEN = response.data.access_token;
+            return next();
+        } else {
+            console.log("No token found");
+            return res.status(500).json({ message: 'Token not found' });
         }
-        else {
-            console.log("No token found")
-        }
-    })
-    .catch((err)=> {
-        console.log("error",err);
-    })
-    return next()
+    } catch (error) {
+        console.log("Error fetching token:", error);
+        return res.status(500).json({ message: 'Error fetching token' });
+    }
+};
 
-}
 router.get('/:categoryname/products', checkToken, async (req, res) => {
 
     const { n, page } = req.query;
